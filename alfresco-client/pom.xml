@@ -3,6 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <apache-chemistry.version>0.13.0</apache-chemistry.version>
+        <commons-lang3.version>3.4</commons-lang3.version>
+        <commons-io.version>2.4</commons-io.version>
+        <alfresco-opencmis-extension.version>1.0</alfresco-opencmis-extension.version>
     </properties>
     <parent>
         <groupId>com.capella</groupId>
@@ -30,6 +33,27 @@
             <artifactId>chemistry-opencmis-commons-api</artifactId>
             <version>${apache-chemistry.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons-io.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.alfresco.cmis.client</groupId>
+            <artifactId>alfresco-opencmis-extension</artifactId>
+            <version>${alfresco-opencmis-extension.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.capella</groupId>
+            <artifactId>alfresco-docx-extension</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>junit</groupId>
@@ -38,4 +62,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>maven.alfresco.com</id>
+            <name>Alfresco Maven Repository</name>
+            <url>http://maven.alfresco.com/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
+
 </project>
