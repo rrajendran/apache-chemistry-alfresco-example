@@ -93,8 +93,7 @@ public class CmisSessionFactory {
 
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document, mage:meta");
-        properties.put("mage:projectName", "Manage Document");
+        properties.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document");
         properties.put(PropertyIds.NAME, filename);
 
         Document doc = folder.createDocument(properties, contentStream, VersioningState.MAJOR);
@@ -140,15 +139,14 @@ public class CmisSessionFactory {
         String documentId = factory.createDocument(folderName);
 
         Document document = factory.getDocument(documentId);
-        Map<String, String> properties = new HashMap<>();
 
-        properties.put(PropertyIds.NAME, "IPT HomeOffice");
+        System.out.println("Document Id :" + document.getId());
+        System.out.println("Document Name :" + document.getName());
+        /*Map<String, String> properties = new HashMap<>();
+        properties.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document");
 
-        properties.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document,mage:meta");
-        properties.put("mage:projectName", "Manage Document");
+       properties.put("User_Custom", "Ramesh");
 
-       // properties.put("User_Custom", "Ramesh");
-
-        document.updateProperties(properties, true);
+        document.updateProperties(properties, true);*/
     }
 }
