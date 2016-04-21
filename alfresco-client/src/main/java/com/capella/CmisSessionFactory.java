@@ -7,18 +7,22 @@ import org.apache.chemistry.opencmis.commons.SessionParameter;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.enums.BindingType;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
+import org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException;
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * Hello world!
  */
 public class CmisSessionFactory {
     private Session session;
-    private Map parameter = new HashMap();
+    private Map parameter = loadConnectionProperties("alfresco.properties");
 
     public CmisSessionFactory() throws IOException {
        createSession();
@@ -26,12 +30,6 @@ public class CmisSessionFactory {
 
     private void createSession() throws IOException {
         SessionFactory sessionFactory = SessionFactoryImpl.newInstance();
-        parameter.put(SessionParameter.USER, "admin");
-        parameter.put(SessionParameter.OBJECT_FACTORY_CLASS, "org.alfresco.cmis.client.impl.AlfrescoObjectFactoryImpl");
-        parameter.put(SessionParameter.PASSWORD, "admin");
-        parameter.put(SessionParameter.ATOMPUB_URL, "http://localhost:9009/alfresco/api/-default-/public/cmis/versions/1.1/atom");
-        parameter.put(SessionParameter.BINDING_TYPE, BindingType.ATOMPUB.value());
-        parameter.put(SessionParameter.REPOSITORY_ID, "-default-");
         session = sessionFactory.createSession(parameter);
     }
 
@@ -78,6 +76,31 @@ public class CmisSessionFactory {
     }
 
 
+    public Map<String, String> loadConnectionProperties(String configResource) {
+        Properties testConfig = new Properties();
+        if (configResource == null) {
+            throw new CmisRuntimeException("Filename with connection parameters was not supplied.");
+        }
+
+        try {
+            InputStream inStream = CmisSessionFactory.class.getClassLoader().getResourceAsStream(configResource);
+            testConfig.load(inStream);
+            inStream.close();
+        } catch (FileNotFoundException e1) {
+            throw new CmisRuntimeException("Test properties file '" + configResource + "' was not found at:"
+                    + configResource);
+        } catch (IOException e) {
+            throw new CmisRuntimeException("Exception loading test properties file " + configResource, e);
+        }
+
+        Map<String, String> map = new HashMap<String, String>();
+        for (Map.Entry<?, ?> entry : testConfig.entrySet()) {
+            System.out.println("Found key: " + entry.getKey() + " Value:" + entry.getValue());
+            map.put((String) entry.getKey(), ((String) entry.getValue()).trim());
+        }
+        return map;
+    }
+
     public String createDocument(Folder folder) throws IOException {
         final String textFileName = "helloworld.docx";
         System.out.println("creating a simple text file, " + textFileName);
@@ -93,8 +116,10 @@ public class CmisSessionFactory {
 
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document");
+        properties.put(PropertyIds.OBJECT_TYPE_ID, "D:ipt:customType");
         properties.put(PropertyIds.NAME, filename);
+        //properties.put("ipt:sourceName", "Home Office");
+
 
         Document doc = folder.createDocument(properties, contentStream, VersioningState.MAJOR);
 
@@ -135,18 +160,31 @@ public class CmisSessionFactory {
     public static void main(String[] args) throws IOException {
         CmisSessionFactory factory = new CmisSessionFactory();
 
+
         Folder folderName = factory.findFolder("ADGNewFolder");
         String documentId = factory.createDocument(folderName);
 
+        System.out.println("Document Id :" + documentId);
+
+
         Document document = factory.getDocument(documentId);
+
+
 
         System.out.println("Document Id :" + document.getId());
         System.out.println("Document Name :" + document.getName());
-        /*Map<String, String> properties = new HashMap<>();
-        properties.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document");
 
-       properties.put("User_Custom", "Ramesh");
 
-        document.updateProperties(properties, true);*/
+        Map<String, String> properties = new HashMap<>();
+        properties.put(PropertyIds.OBJECT_TYPE_ID, "D:ipt:customType");
+        //properties.put("ipt:sourceName", null);
+
+        document.updateProperties(properties, true);
+
+
+
+
+        document.getProperties().stream().forEach(property -> System.out.println(property.getQueryName() + " - " + property.getValue()));
+
     }
 }

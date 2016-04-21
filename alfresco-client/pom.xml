@@ -48,11 +48,6 @@
             <artifactId>alfresco-opencmis-extension</artifactId>
             <version>${alfresco-opencmis-extension.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.capella</groupId>
-            <artifactId>alfresco-docx-extension</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
 
         <dependency>
