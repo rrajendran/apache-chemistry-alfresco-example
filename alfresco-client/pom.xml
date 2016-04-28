@@ -77,9 +77,11 @@
                     <stopKey>foo</stopKey>
                     <stopPort>9999</stopPort>
                     <contextPath>/alfresco</contextPath>
+                    <tmpDirectory>${project.build.outputDirectory}/tmp</tmpDirectory>
                     <webApp>
                         src/main/resources/alfresco.war
                     </webApp>
+
                 </configuration>
                 <executions>
                     <execution>
