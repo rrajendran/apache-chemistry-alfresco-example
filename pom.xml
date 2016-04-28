@@ -8,7 +8,6 @@
     <name>Apache Chemistry Alfresco CMIS Parent</name>
     <description>This is the parent project for Apache chemistry alfresco client integration</description>
     <modules>
-        <module>alfresco-docx-extension</module>
         <module>alfresco-client</module>
     </modules>
     <properties>
