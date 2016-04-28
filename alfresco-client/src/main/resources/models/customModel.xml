@@ -6,12 +6,12 @@
      which is defined further on in the document -->
 <model name="ipt:iptnewmodel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
 
-   <!-- Optional meta-data about the model -->   
+   <!-- Optional meta-data about the model -->
    <description>Example custom Model</description>
    <author></author>
    <version>1.0</version>
 
-   <!-- Imports are required to allow references to definitions in other models -->   
+   <!-- Imports are required to allow references to definitions in other models -->
    <imports>
    	  <!-- Import Alfresco Dictionary Definitions -->
       <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
@@ -24,9 +24,9 @@
    <namespaces>
       <namespace uri="ipt.new.model" prefix="ipt"/>
    </namespaces>
-   
+
    <types>
-   
+
       <!-- Definition of new Content Type: Standard Operating Procedure -->
       <type name="ipt:customDocumentModel">
          <title>IPT Custom Document Model Types</title>
@@ -40,8 +40,8 @@
             </property>
          </properties>
       </type>
-      
+
     </types>
-    
-   
+
+
 </model>
