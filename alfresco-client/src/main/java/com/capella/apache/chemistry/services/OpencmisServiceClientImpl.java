@@ -56,7 +56,7 @@ public class OpencmisServiceClientImpl implements OpenCmisServiceClient {
             if (folder == null) {
                 folder = createFolder(FOLDER_NAME);
             }
-            Document doc = folder.createDocument(properties, contentStream, VersioningState.NONE);
+            Document doc = folder.createDocument(properties, contentStream, VersioningState.MAJOR);
             return doc.getId();
         } catch (Exception e) {
             throw new DocumentManagementException("Error creating document - " + e.getMessage(), e);
