@@ -11,7 +11,7 @@ import java.io.InputStream;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 /**
  * Created by asylum on 4/28/16.
@@ -21,7 +21,7 @@ public class OpencmisServiceClientImplTest {
     private String documentId;
 
     @Before
-    public void testCreateAndGetDocument()  {
+    public void testCreateAndGetDocument() throws DocumentNotFoundException {
         // given
         final String textFileName = "documents/helloworld.docx";
         final String fileName = "helloworld.docx";

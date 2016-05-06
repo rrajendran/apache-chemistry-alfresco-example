@@ -8,14 +8,18 @@ import org.apache.chemistry.opencmis.client.api.*;
 import org.apache.chemistry.opencmis.client.runtime.SessionFactoryImpl;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
+import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
+import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.Callable;
+
+import static org.apache.chemistry.opencmis.commons.enums.Action.CAN_CHECK_OUT;
 
 /**
  * Opencmis Service Client
@@ -36,34 +40,86 @@ public class OpencmisServiceClientImpl implements OpenCmisServiceClient {
     }
 
     @Override
-    public String createDocument(String fileName, String mimeType, InputStream inputStream) {
+    public String createDocument(String fileName, String mimeType, InputStream inputStream) throws DocumentNotFoundException {
 
         checkIfNull(fileName, "File name is required");
         checkIfNull(mimeType, "Mime type is required");
         checkIfNull(inputStream, "Inputstream cannot be null");
         try {
-            byte[] bytes = org.apache.commons.io.IOUtils.toByteArray(inputStream);
 
-            final Session session = getSession(null);
-            ContentStream contentStream = session.getObjectFactory().createContentStream(fileName, bytes.length, mimeType, new ByteArrayInputStream(bytes));
+            Document findDoc = findDocumentByFileName(fileName);
+            if (findDoc != null) {
+                return updateDocument(findDoc.getId(), inputStream);
+            } else {
+                byte[] bytes = org.apache.commons.io.IOUtils.toByteArray(inputStream);
 
-            Map<String, Object> properties = new HashMap<String, Object>();
-            properties.put(PropertyIds.OBJECT_TYPE_ID, OBJECT_MODEL);
-            properties.put(PropertyIds.NAME, fileName);
-            properties.put("ipt:sourceSystem", "test");
+                final Session session = getSession(null);
+                ContentStream contentStream = session.getObjectFactory().createContentStream(fileName, bytes.length, mimeType, new ByteArrayInputStream(bytes));
 
-            Folder folder = findFolder(FOLDER_NAME);
-            if (folder == null) {
-                folder = createFolder(FOLDER_NAME);
+                Map<String, Object> properties = new HashMap<String, Object>();
+                properties.put(PropertyIds.OBJECT_TYPE_ID, OBJECT_MODEL);
+                properties.put(PropertyIds.NAME, fileName);
+                properties.put("ipt:sourceSystem", "test");
+
+                Folder folder = findFolder(FOLDER_NAME);
+                if (folder == null) {
+                    folder = createFolder(FOLDER_NAME);
+                }
+
+                Document doc = folder.createDocument(properties, contentStream, VersioningState.MAJOR);
+                return doc.getId();
             }
-            Document doc = folder.createDocument(properties, contentStream, VersioningState.MAJOR);
-            return doc.getId();
         } catch (Exception e) {
             throw new DocumentManagementException("Error creating document - " + e.getMessage(), e);
         }
     }
 
+    @Override
+    public String updateDocument(String documentId, InputStream inputStream) throws DocumentManagementException {
+        try {
+            Session session = getSession(null);
+            Document document = (Document) session.getObject(documentId);
 
+            byte[] bytes = IOUtils.toByteArray(inputStream);
+            ContentStream contentStream = session.getObjectFactory().createContentStream(document.getContentStreamFileName(),
+                    bytes.length, document.getContentStreamMimeType(),
+                    new ByteArrayInputStream(bytes));
+
+            if (document.getAllowableActions().getAllowableActions().contains(CAN_CHECK_OUT)) {
+                document.refresh();
+
+                ObjectId objectId = document.checkOut();
+                Document pwc = (Document) session.getObject(objectId);
+                ObjectId updatedDocumentObjectId = pwc.checkIn(true, null, contentStream, "Document updated");
+                documentId = updatedDocumentObjectId.getId();
+            }
+            return documentId;
+
+        } catch (Exception ex) {
+            throw new DocumentManagementException(String.format("Error creating document '%s'", documentId), ex);
+        }
+    }
+
+    /**
+     * Search documents
+     *
+     * @param name
+     * @return
+     */
+    @Override
+    public Document findDocumentByFileName(String name) throws DocumentNotFoundException {
+        Session session = getSession(null);
+        ItemIterable<QueryResult> results = session.query("SELECT * FROM cmis:document where cmis:name = '" + name + "'", false);
+        if (results.getTotalNumItems() > 1) {
+            throw new DocumentManagementException("Multiple results returned");
+        }
+
+        for (QueryResult hit : results) {
+            PropertyData<Object> propertyById = hit.getPropertyById("cmis:objectId");
+            return (Document) session.getObject(propertyById.getFirstValue().toString());
+        }
+        return null;
+    }
     @Override
     public Folder findFolder(String folderName) {
         checkIfNull(folderName, "folder name is required");

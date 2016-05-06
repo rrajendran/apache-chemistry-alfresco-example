@@ -1,5 +1,6 @@
 package com.capella.apache.chemistry.services;
 
+import com.capella.apache.chemistry.exceptions.DocumentManagementException;
 import com.capella.apache.chemistry.exceptions.DocumentNotFoundException;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
@@ -22,7 +23,11 @@ public interface OpenCmisServiceClient {
      * @return Return documentId
      * @throws IOException
      */
-    String createDocument(String fileName, String mimeType, InputStream inputStream);
+    String createDocument(String fileName, String mimeType, InputStream inputStream) throws DocumentNotFoundException;
+
+    String updateDocument(String documentId, InputStream inputStream) throws DocumentManagementException;
+
+    Document findDocumentByFileName(String name) throws DocumentNotFoundException;
 
     /**
      * Find folder
