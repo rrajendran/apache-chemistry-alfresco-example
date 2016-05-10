@@ -25,8 +25,20 @@ public interface OpenCmisServiceClient {
      */
     String createDocument(String fileName, String mimeType, InputStream inputStream) throws DocumentNotFoundException;
 
-    String updateDocument(String documentId, InputStream inputStream) throws DocumentManagementException;
+    /**
+     * Update document
+     * @param documentId
+     * @param inputStream
+     * @throws DocumentManagementException
+     */
+    void updateDocument(String documentId, InputStream inputStream) throws DocumentManagementException;
 
+    /**
+     * Find document by file name
+     * @param name
+     * @return
+     * @throws DocumentNotFoundException
+     */
     Document findDocumentByFileName(String name) throws DocumentNotFoundException;
 
     /**

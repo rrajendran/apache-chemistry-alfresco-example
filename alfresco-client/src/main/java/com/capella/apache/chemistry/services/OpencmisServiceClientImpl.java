@@ -2,6 +2,7 @@ package com.capella.apache.chemistry.services;
 
 import com.capella.apache.chemistry.exceptions.DocumentManagementException;
 import com.capella.apache.chemistry.exceptions.DocumentNotFoundException;
+import com.capella.apache.chemistry.exceptions.DocumentUpdateException;
 import com.capella.apache.chemistry.mappers.PropertyIdMapper;
 import org.apache.chemistry.opencmis.client.SessionParameterMap;
 import org.apache.chemistry.opencmis.client.api.*;
@@ -9,9 +10,12 @@ import org.apache.chemistry.opencmis.client.runtime.SessionFactoryImpl;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
+import org.apache.chemistry.opencmis.commons.enums.CapabilityContentStreamUpdates;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -19,12 +23,11 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-import static org.apache.chemistry.opencmis.commons.enums.Action.CAN_CHECK_OUT;
-
 /**
  * Opencmis Service Client
  */
 public class OpencmisServiceClientImpl implements OpenCmisServiceClient {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpencmisServiceClientImpl.class);
     public static final String FOLDER_NAME = "IPT_DOCS";
     public static final String OBJECT_MODEL = "D:ipt:customDocumentModel";
     //public static final String OBJECT_MODEL = "cmis:document";
@@ -49,7 +52,8 @@ public class OpencmisServiceClientImpl implements OpenCmisServiceClient {
 
             Document findDoc = findDocumentByFileName(fileName);
             if (findDoc != null) {
-                return updateDocument(findDoc.getId(), inputStream);
+                updateDocument(findDoc.getId(), inputStream);
+                return findDoc.getId();
             } else {
                 byte[] bytes = org.apache.commons.io.IOUtils.toByteArray(inputStream);
 
@@ -66,7 +70,7 @@ public class OpencmisServiceClientImpl implements OpenCmisServiceClient {
                     folder = createFolder(FOLDER_NAME);
                 }
 
-                Document doc = folder.createDocument(properties, contentStream, VersioningState.MAJOR);
+                Document doc = folder.createDocument(properties, contentStream, VersioningState.NONE);
                 return doc.getId();
             }
         } catch (Exception e) {
@@ -75,7 +79,7 @@ public class OpencmisServiceClientImpl implements OpenCmisServiceClient {
     }
 
     @Override
-    public String updateDocument(String documentId, InputStream inputStream) throws DocumentManagementException {
+    public void updateDocument(String documentId, InputStream inputStream) throws DocumentManagementException {
         try {
             Session session = getSession(null);
             Document document = (Document) session.getObject(documentId);
@@ -85,15 +89,13 @@ public class OpencmisServiceClientImpl implements OpenCmisServiceClient {
                     bytes.length, document.getContentStreamMimeType(),
                     new ByteArrayInputStream(bytes));
 
-            if (document.getAllowableActions().getAllowableActions().contains(CAN_CHECK_OUT)) {
-                document.refresh();
-
-                ObjectId objectId = document.checkOut();
-                Document pwc = (Document) session.getObject(objectId);
-                ObjectId updatedDocumentObjectId = pwc.checkIn(true, null, contentStream, "Document updated");
-                documentId = updatedDocumentObjectId.getId();
+            if (session.getRepositoryInfo().getCapabilities().getContentStreamUpdatesCapability()
+                    .equals(CapabilityContentStreamUpdates.ANYTIME)) {
+                LOGGER.info("Repository support anytime update");
+                document.setContentStream(contentStream, true);
+            } else {
+                throw new DocumentUpdateException(String.format("Updates not allowed on document '%s'", documentId));
             }
-            return documentId;
 
         } catch (Exception ex) {
             throw new DocumentManagementException(String.format("Error creating document '%s'", documentId), ex);
