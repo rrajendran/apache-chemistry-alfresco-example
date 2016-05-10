@@ -63,7 +63,6 @@ public class OpencmisServiceClientImpl implements OpenCmisServiceClient {
                 Map<String, Object> properties = new HashMap<String, Object>();
                 properties.put(PropertyIds.OBJECT_TYPE_ID, OBJECT_MODEL);
                 properties.put(PropertyIds.NAME, fileName);
-                properties.put("ipt:sourceSystem", "test");
 
                 Folder folder = findFolder(FOLDER_NAME);
                 if (folder == null) {
